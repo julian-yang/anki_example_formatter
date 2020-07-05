@@ -17,6 +17,7 @@ from .lib.pinyin import pinyin
 from os.path import dirname, join
 sys.path.append(join(dirname(__file__), 'lib'))
 import string
+from . import format_chinese_note_definitions
 
 
 
@@ -81,6 +82,26 @@ def find_examples(editor):
     openLink(examples_link)
 
 
+def format_english(editor):
+    if 'Front' not in editor.note.keys():
+        showInfo(f"couldn't find Front field! note fields: {editor.note.keys}")
+        return
+    hanzi = editor.note['Front']
+    original_examples = editor.note['Examples']
+    silhouette = editor.note['Silhouette']
+    pinyin = editor.note['Pinyin']
+    finished_examples, finished_front_examples = format_chinese_note_definitions.format_english(hanzi, original_examples, silhouette, pinyin)
+    editor.note['Examples'] = finished_examples
+    editor.note['Examples-front'] = finished_front_examples
+    editor.note.flush()
+    backend_note = mw.col.getNote(editor.note.id)
+
+    editor.setNote(backend_note)
+    # showInfo(pprint.pformat(backend_note['Examples']))
+
+
+
+
 def onToggle(editor):
     mid = str(editor.note.model()['id'])
 
@@ -136,6 +157,16 @@ def setupButton(buttons, editor):
         id='findExamples',
         toggleable=True,
         keys="Ctrl+/")
+
+    format_english_button1 = editor.addButton(
+        icon=None,
+        cmd='formatEnglish1',
+        tip='Format English 1',
+        label='<b>Format English 1</b>',
+        func=format_english,
+        id='formatEnglish1',
+        toggleable=True,
+        keys="Ctrl+Y")
 
     return buttons + [button, find_examples_button]
 
